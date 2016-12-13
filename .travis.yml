@@ -1,0 +1,16 @@
+language: go
+go:
+- 1.x
+install:
+- go get github.com/atotto/clipboard
+- go get github.com/fatih/color
+gobuild_args: -x -ldflags "-X main.Version $(git describe --tags --long)"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: jRuGPnYAyipvF27WLrgkdVSEkTV7A0x+4DFiJ9+lUWKGcyUJeNOpLHyZcKaqoMhXBdy9T0gINhsjn+uVUpyesQ+8A+GItEqppYBoVJUpDKH4jV/g9o7zhNxDixMssUrcTxk8qNkxs2WUAuMKi+dfXYAVmmkfXcHoHdmk/U5BZ6BrJaorFTYXyFRSzBlArVLZ/CZct+9vS3y71NWAn9Cem4Y/zTlpHN02mGx4xIcDcSWqftupew8eazd7FqnlZPnNlSn3O7eO4V5clInljEeFHY2/+wmUjUUjJ9iE2Pi7TeFQGeDMK5wn5Cz60hlY0STO5SBFXCPyJIV+cV9sHh67Cd4TCcVMlE3jznEa4OqJxE5mUw/isgQML6FsU6StG4TyM/nY3drL5ODbKmFmDLKA3gYzOMjjuKoxJQh46FQ1PrJ8UfH7ytgZIQMoZlxLL6oVHJHseZap1Y2z5eE888s1FlOL8SXmzjNAbZ0whU4KpclkhSyK85rNKbU/Be7MDKCqw3jIHt2TTUGZ28+ATrz8lh6mV6jPiQKJkAJEo5QiR9mKpEgQTbMtq3J/wKrOOZ23NxQqyb+N/t93PVVpB4IcMQb1VElKxZV2O01fa+X85OO74cFUQyz5IX2ChLaipTEl70nNtuuU8Xn6b78WnLf5HaqdzCBSmtuSD+7Qrvfhy6U=
+  file: cmd/epochtool
+  on:
+    tags: true
+  overwrite: true

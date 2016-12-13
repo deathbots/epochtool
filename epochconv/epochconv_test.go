@@ -2,8 +2,14 @@ package epochconv
 
 import (
 	"testing"
+	"reflect"
+	"time"
+	"fmt"
+	"math"
 )
 
+// used to determine the strings are parseable because particular errors are swallowed
+// at struct init type. Failure here would mean the package wouldn't be able to load.
 var timeStringTests = []struct {
 	in EpochType
 }{
@@ -30,8 +36,8 @@ func TestTimeStringsParseable(t *testing.T) {
 		if tt.in.EpochDate.IsZero() && tt.in.EpochName != "CommonEra" { // This fails for CommonEra since it's 0
 			t.Errorf("Time was not initialized properly for Epoch Date %s, check format string constant used", tt.in.EpochName)
 		}
-		if tt.in.RightNowInSecondsSince < 1 {
-			t.Errorf("Epoch time %s, from Epoch Date %s, was not greater than one", tt.in.RightNowInSecondsSince, tt.in.EpochName)
+		if tt.in.LocalRightNowInSecondsSince < 1 {
+			t.Errorf("Epoch time %s, from Epoch Date %s, was not greater than one", tt.in.LocalRightNowInSecondsSince, tt.in.EpochName)
 		}
 	}
 }
@@ -48,11 +54,47 @@ func TestAllEpochsContainsAll(t *testing.T) {
 }
 
 
+// Tests whether top result is correctly picked for a known epoch
+func TestFirstSortedEpochFromUnix(t *testing.T) {
+	sorted := AllEpochs.OrderedEpochsByClosestMatch(0, time.Unix(0,0).UTC())
+	if sorted[0].EpochName != "Unix" {
+		t.Errorf("Epoch Type %s was not incorrect for testing against Unix timestamp", sorted[0].EpochName)
+	}
+}
+
+// Tests whether epochs sorting is done correctly.
+func TestEpochsSortByDistance(t *testing.T) {
+	epochStartTime, err := time.Parse(time.RFC3339, dateStringCommonEra)
+	if err != nil {
+		t.Errorf("Could not parse epoch start time", err)
+	}
+	sorted := AllEpochs.OrderedEpochsByClosestMatch(0, epochStartTime)
+
+	epochSeconds := make([]int64,len(sorted))
+	for i, et := range sorted {
+		epochSeconds[i] = et.LocalRightNowInSecondsSince
+	}
+	// these should be in descending order
+	last := int64(math.MaxInt64)
+	for _, v := range epochSeconds {
+		if v > last {
+			t.Errorf("Epoch collection Sorting was done incorrectly", err)
+		}
+		last = v
+	}
+
+	for _, sec := range epochSeconds {
+		fmt.Printf("%d\n", sec)
+	}
+}
+
+
 func epochInSlice(s []EpochType, e EpochType) bool {
 	for _, a := range s {
-		if a == e {
+		if reflect.DeepEqual(a, e) {
 			return true
 		}
 	}
 	return false
 }
+

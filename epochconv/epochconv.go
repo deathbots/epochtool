@@ -18,16 +18,17 @@ import (
 //todo: what to do about javascript (1000x)
 // epochResult is used in an EpochResultBundle
 type epochResult struct {
-	InputNumber int64
-	EpochType   EpochType
-	DateInEpoch time.Time
+	InputNumber      int64		`json:"input_number"`
+	EpochType        EpochType	`json:"epoch_type"`
+	DateInEpochLocal time.Time	`json:"converted_date_local"`
+	DateInEpochUTC time.Time	`json:"converted_date_utc"`
 }
 
 type EpochResults struct {
-	InputNumber    int64
-	epochTypes     EpochCollection
-	AllResults     []epochResult
-	MostLikelyType EpochType
+	InputNumber    int64	`json:"input_number"`
+	epochTypes     EpochCollection	`json:"epoch_types"`
+	AllResults     []epochResult	`json:"all_results"`
+	MostLikelyType EpochType	`json:"most_likely_epoch"`
 }
 
 
@@ -55,8 +56,10 @@ func createGuesses(stringsToConvert []string, collection EpochCollection) (epoch
 		epochResultsSlice[i].epochTypes = collection
 		epochResultsSlice[i].InputNumber = n
 		for _, et := range collection {
-			er := epochResult{EpochType:et,
-				DateInEpoch:et.DateForNumber(n),
+			er := epochResult{InputNumber:n,
+				EpochType:et,
+				DateInEpochLocal:et.DateForNumber(n,false),
+				DateInEpochUTC:et.DateForNumber(n,true),
 			}
 			epochResultsSlice[i].AllResults = append(epochResultsSlice[i].AllResults, er)
 		}
@@ -158,18 +161,3 @@ func (a preserveSecondEl) Less(i, j int) bool {
 	return a[i][0] < a[j][0]
 }
 
-
-// String satisfies the Stringer interface, so this is printed when %s is used in a formatting string for EpochResults
-func (ers EpochResults) String() string {
-	var out string
-	out = out + fmt.Sprintf("For Input Number: %d\n" +
-		"---------Most Likely Result----\n" +
-		"%s" +
-		"---------Other Results---------\n", ers.InputNumber, ers.MostLikelyType)
-	for _, er := range ers.AllResults {
-		out = out + fmt.Sprintf("Date in this Epoch %s\n" +
-			"%s\n", er.DateInEpoch, er.EpochType)
-	}
-
-	return out
-}

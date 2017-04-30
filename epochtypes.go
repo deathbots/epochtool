@@ -1,10 +1,10 @@
 package epochconv
 
 import (
-	"time"
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
+	"time"
 )
 
 // Holds types of epochs
@@ -14,163 +14,160 @@ import (
 // follow this format.
 const CustomEpochTimeFormatString = "2006-01-02T15:04:05Z"
 
-
 // Dates which conform to the above formatting string. These must, of course, all be in the past - or there is an
 // outside risk the program would crash due to all numbers being positive.
-const
-(
-	dateStringCommonEra = "0001-01-01T00:00:00Z"
-	dateStringUnixEpoch = "1970-01-01T00:00:00Z"
-	dateStringWindowsEpoch = "1601-01-01T00:00:00Z"
-	dateStringVMSEpoch = "1858-11-17T00:00:00Z"
-	dateStringMicrosoftCOM = "1899-12-30T00:00:00Z"
+const (
+	dateStringCommonEra      = "0001-01-01T00:00:00Z"
+	dateStringUnixEpoch      = "1970-01-01T00:00:00Z"
+	dateStringWindowsEpoch   = "1601-01-01T00:00:00Z"
+	dateStringVMSEpoch       = "1858-11-17T00:00:00Z"
+	dateStringMicrosoftCOM   = "1899-12-30T00:00:00Z"
 	dateStringMicrosoftExcel = "1899-12-31T00:00:00Z"
-	dateStringNTP = "1900-01-01T00:00:00Z"
-	dateStringMacClassic = "1904-01-01T00:00:00Z"
-	dateStringMicrosoftFAT = "1980-01-01T00:00:00Z"
-	dateStringGPS = "1980-01-06T00:00:00Z"
-	dateStringPostgreSQL = "2000-01-01T00:00:00Z"
-	dateStringMacOSX = "2001-01-01T00:00:00Z"
+	dateStringNTP            = "1900-01-01T00:00:00Z"
+	dateStringMacClassic     = "1904-01-01T00:00:00Z"
+	dateStringMicrosoftFAT   = "1980-01-01T00:00:00Z"
+	dateStringGPS            = "1980-01-06T00:00:00Z"
+	dateStringPostgreSQL     = "2000-01-01T00:00:00Z"
+	dateStringMacOSX         = "2001-01-01T00:00:00Z"
 )
 
 type EpochCollection []EpochType
 
 // Skeletal type
 type EpochType struct {
-	EpochName                   string    `json:"epoch_name"`// Friendly name of epoch
-	EpochUses                   []string  `json:"epoch_uses"`// Slice of common uses of this specific epoch
-	EpochDateString             string    `json:"-"`		// The date string formatted like CustomEpochTimeFormatString that defines this
-	EpochDate                   time.Time `json:"epoch_date"`// The time.Time date representation of the epoch start
-	LocalRightNowInSecondsSince int64     `json:"now_local"`// time.Now().Local - Local time in seconds since epoch start.
-	UTCRightNowInSecondsSince   int64     `json:"now_utc"`// time.Now().UTC - UTC time in seconds since epoch start.
-	Prevalence                  int       `json:"prevalence"`// 0-5, 0 being least common. Helps decide most likely matches when it's close.
+	EpochName                   string    `json:"epoch_name"` // Friendly name of epoch
+	EpochUses                   []string  `json:"epoch_uses"` // Slice of common uses of this specific epoch
+	EpochDateString             string    `json:"-"`          // The date string formatted like CustomEpochTimeFormatString that defines this
+	EpochDate                   time.Time `json:"epoch_date"` // The time.Time date representation of the epoch start
+	LocalRightNowInSecondsSince int64     `json:"now_local"`  // time.Now().Local - Local time in seconds since epoch start.
+	UTCRightNowInSecondsSince   int64     `json:"now_utc"`    // time.Now().UTC - UTC time in seconds since epoch start.
+	Prevalence                  int       `json:"prevalence"` // 0-5, 0 being least common. Helps decide most likely matches when it's close.
 }
 
 var (
 	EpochCommonEra = EpochType{
-		EpochName:"CommonEra",
-		EpochUses: []string{"Common Era", "ISO 2014", "RFC 3339", "Microsoft .NET", "Go", "REXX", "Rata Die"},
-		EpochDateString: dateStringCommonEra,
-		EpochDate: sp(dateStringCommonEra),
+		EpochName:                   "CommonEra",
+		EpochUses:                   []string{"Common Era", "ISO 2014", "RFC 3339", "Microsoft .NET", "Go", "REXX", "Rata Die"},
+		EpochDateString:             dateStringCommonEra,
+		EpochDate:                   sp(dateStringCommonEra),
 		LocalRightNowInSecondsSince: te(dateStringCommonEra, false),
-		UTCRightNowInSecondsSince: te(dateStringCommonEra, true),
-		Prevalence: 1,
+		UTCRightNowInSecondsSince:   te(dateStringCommonEra, true),
+		Prevalence:                  1,
 	}
 
 	EpochUnix = EpochType{
-		EpochName:"Unix",
-		EpochUses: []string{"Unix", "Unix Variants (Linux, MacOS, Solaris, BSD, etc...)", "POSIX"},
-		EpochDateString: dateStringUnixEpoch,
-		EpochDate: sp(dateStringUnixEpoch),
+		EpochName:                   "Unix",
+		EpochUses:                   []string{"Unix", "Unix Variants (Linux, MacOS, Solaris, BSD, etc...)", "POSIX"},
+		EpochDateString:             dateStringUnixEpoch,
+		EpochDate:                   sp(dateStringUnixEpoch),
 		LocalRightNowInSecondsSince: te(dateStringUnixEpoch, false),
-		UTCRightNowInSecondsSince: te(dateStringUnixEpoch, true),
-		Prevalence: 5,
+		UTCRightNowInSecondsSince:   te(dateStringUnixEpoch, true),
+		Prevalence:                  5,
 	}
 
 	EpochWindowsEpoch = EpochType{
-		EpochName:"Windows",
-		EpochUses: []string{"Windows", "NTFS", "COBOL"},
-		EpochDateString: dateStringWindowsEpoch,
-		EpochDate: sp(dateStringWindowsEpoch),
+		EpochName:                   "Windows",
+		EpochUses:                   []string{"Windows", "NTFS", "COBOL"},
+		EpochDateString:             dateStringWindowsEpoch,
+		EpochDate:                   sp(dateStringWindowsEpoch),
 		LocalRightNowInSecondsSince: te(dateStringWindowsEpoch, false),
-		UTCRightNowInSecondsSince: te(dateStringWindowsEpoch, true),
-		Prevalence: 5,
+		UTCRightNowInSecondsSince:   te(dateStringWindowsEpoch, true),
+		Prevalence:                  5,
 	}
 
 	EpochVMS = EpochType{
-		EpochName:"VMS",
-		EpochUses: []string{"VMS", "United States Naval Observatory", "DVB SI 16-bit day stamps", "Astronomy-related"},
-		EpochDateString: dateStringVMSEpoch,
-		EpochDate: sp(dateStringVMSEpoch),
+		EpochName:                   "VMS",
+		EpochUses:                   []string{"VMS", "United States Naval Observatory", "DVB SI 16-bit day stamps", "Astronomy-related"},
+		EpochDateString:             dateStringVMSEpoch,
+		EpochDate:                   sp(dateStringVMSEpoch),
 		LocalRightNowInSecondsSince: te(dateStringVMSEpoch, false),
-		UTCRightNowInSecondsSince: te(dateStringVMSEpoch, true),
-		Prevalence: 3,
+		UTCRightNowInSecondsSince:   te(dateStringVMSEpoch, true),
+		Prevalence:                  3,
 	}
 
 	EpochMicrosoftCOM = EpochType{
-		EpochName:"Microsoft COM",
-		EpochUses: []string{"Microsoft COM DATE", "Object Pascal", "LibreOffice Calc", "Google Sheets", "Technical internal value used by Microsoft Excel"},
-		EpochDateString: dateStringMicrosoftCOM,
-		EpochDate: sp(dateStringMicrosoftCOM),
+		EpochName:                   "Microsoft COM",
+		EpochUses:                   []string{"Microsoft COM DATE", "Object Pascal", "LibreOffice Calc", "Google Sheets", "Technical internal value used by Microsoft Excel"},
+		EpochDateString:             dateStringMicrosoftCOM,
+		EpochDate:                   sp(dateStringMicrosoftCOM),
 		LocalRightNowInSecondsSince: te(dateStringMicrosoftCOM, false),
-		UTCRightNowInSecondsSince: te(dateStringMicrosoftCOM, true),
-		Prevalence: 4,
+		UTCRightNowInSecondsSince:   te(dateStringMicrosoftCOM, true),
+		Prevalence:                  4,
 	}
 
 	EpochMicrosoftExcel = EpochType{
-		EpochName:"Microsoft Excel",
-		EpochUses: []string{"Microsoft Excel", "Lotus 1-2-3"},
-		EpochDateString: dateStringMicrosoftExcel,
-		EpochDate: sp(dateStringMicrosoftExcel),
+		EpochName:                   "Microsoft Excel",
+		EpochUses:                   []string{"Microsoft Excel", "Lotus 1-2-3"},
+		EpochDateString:             dateStringMicrosoftExcel,
+		EpochDate:                   sp(dateStringMicrosoftExcel),
 		LocalRightNowInSecondsSince: te(dateStringMicrosoftExcel, false),
-		UTCRightNowInSecondsSince: te(dateStringMicrosoftExcel, true),
-		Prevalence: 3,
+		UTCRightNowInSecondsSince:   te(dateStringMicrosoftExcel, true),
+		Prevalence:                  3,
 	}
 
 	EpochNTP = EpochType{
-		EpochName:"NTP",
-		EpochUses: []string{"Network Time Protocol", "IBM CICS", "Mathematica", "RISC OS", "VME", "Common Lisp", "Michigan Terminal System"},
-		EpochDateString: dateStringNTP,
-		EpochDate: sp(dateStringNTP),
+		EpochName:                   "NTP",
+		EpochUses:                   []string{"Network Time Protocol", "IBM CICS", "Mathematica", "RISC OS", "VME", "Common Lisp", "Michigan Terminal System"},
+		EpochDateString:             dateStringNTP,
+		EpochDate:                   sp(dateStringNTP),
 		LocalRightNowInSecondsSince: te(dateStringNTP, false),
-		UTCRightNowInSecondsSince: te(dateStringNTP, true),
-		Prevalence: 2,
+		UTCRightNowInSecondsSince:   te(dateStringNTP, true),
+		Prevalence:                  2,
 	}
 
 	EpochMacClassic = EpochType{
-		EpochName:"Mac Classic",
-		EpochUses: []string{"Apple Inc.'s classic Mac OS, LabVIEW, Palm OS, MP4, Microsoft Excel (optionally), IGOR Pro"},
-		EpochDateString: dateStringMacClassic,
-		EpochDate: sp(dateStringMacClassic),
+		EpochName:                   "Mac Classic",
+		EpochUses:                   []string{"Apple Inc.'s classic Mac OS, LabVIEW, Palm OS, MP4, Microsoft Excel (optionally), IGOR Pro"},
+		EpochDateString:             dateStringMacClassic,
+		EpochDate:                   sp(dateStringMacClassic),
 		LocalRightNowInSecondsSince: te(dateStringMacClassic, false),
-		UTCRightNowInSecondsSince: te(dateStringMacClassic, true),
-		Prevalence: 2,
+		UTCRightNowInSecondsSince:   te(dateStringMacClassic, true),
+		Prevalence:                  2,
 	}
 
 	EpochFAT = EpochType{
-		EpochName:"FAT",
-		EpochUses: []string{"FAT12", "FAT16", "FAT32", "exFAT filesystems", "IBM BIOS", "INT 1Ah", "DOS", "OS/2", },
-		EpochDateString: dateStringMicrosoftFAT,
-		EpochDate: sp(dateStringMicrosoftFAT),
+		EpochName:                   "FAT",
+		EpochUses:                   []string{"FAT12", "FAT16", "FAT32", "exFAT filesystems", "IBM BIOS", "INT 1Ah", "DOS", "OS/2"},
+		EpochDateString:             dateStringMicrosoftFAT,
+		EpochDate:                   sp(dateStringMicrosoftFAT),
 		LocalRightNowInSecondsSince: te(dateStringMicrosoftFAT, false),
-		UTCRightNowInSecondsSince: te(dateStringMicrosoftFAT, true),
-		Prevalence: 5,
+		UTCRightNowInSecondsSince:   te(dateStringMicrosoftFAT, true),
+		Prevalence:                  5,
 	}
 
 	// This is very close to FAT
 	EpochGPS = EpochType{
-		EpochName:"GPS",
-		EpochUses: []string{"Qualcomm BREW", "GPS", "ATSC 32-bit time stamps"},
-		EpochDateString: dateStringGPS,
-		EpochDate: sp(dateStringGPS),
+		EpochName:                   "GPS",
+		EpochUses:                   []string{"Qualcomm BREW", "GPS", "ATSC 32-bit time stamps"},
+		EpochDateString:             dateStringGPS,
+		EpochDate:                   sp(dateStringGPS),
 		LocalRightNowInSecondsSince: te(dateStringGPS, false),
-		UTCRightNowInSecondsSince: te(dateStringGPS, true),
-		Prevalence: 2,
+		UTCRightNowInSecondsSince:   te(dateStringGPS, true),
+		Prevalence:                  2,
 	}
 	// This epoch is very close to OS X epoch
 	EpochPostgreSQL = EpochType{
-		EpochName:"PostgreSQL",
-		EpochUses: []string{"PostgreSQL", "AppleSingle", "AppleDouble", "ZigBee UTCTime"},
-		EpochDateString: dateStringPostgreSQL,
-		EpochDate: sp(dateStringPostgreSQL),
+		EpochName:                   "PostgreSQL",
+		EpochUses:                   []string{"PostgreSQL", "AppleSingle", "AppleDouble", "ZigBee UTCTime"},
+		EpochDateString:             dateStringPostgreSQL,
+		EpochDate:                   sp(dateStringPostgreSQL),
 		LocalRightNowInSecondsSince: te(dateStringPostgreSQL, false),
-		UTCRightNowInSecondsSince: te(dateStringPostgreSQL, true),
-		Prevalence: 3,
+		UTCRightNowInSecondsSince:   te(dateStringPostgreSQL, true),
+		Prevalence:                  3,
 	}
 
 	EpochMacOSX = EpochType{
-		EpochName:"Mac OS X",
-		EpochUses: []string{"OS X, Apple Cocoa"},
-		EpochDateString: dateStringMacOSX,
-		EpochDate: sp(dateStringMacOSX),
+		EpochName:                   "Mac OS X",
+		EpochUses:                   []string{"OS X, Apple Cocoa"},
+		EpochDateString:             dateStringMacOSX,
+		EpochDate:                   sp(dateStringMacOSX),
 		LocalRightNowInSecondsSince: te(dateStringMacOSX, false),
-		UTCRightNowInSecondsSince: te(dateStringMacOSX, true),
-		Prevalence: 5,
+		UTCRightNowInSecondsSince:   te(dateStringMacOSX, true),
+		Prevalence:                  5,
 	}
 	AllEpochs = EpochCollection{EpochCommonEra, EpochWindowsEpoch, EpochVMS, EpochMicrosoftCOM, EpochMicrosoftExcel,
 		EpochNTP, EpochMacClassic, EpochUnix, EpochFAT, EpochGPS, EpochPostgreSQL, EpochMacOSX}
 )
-
 
 // GuessesForStrings is a method on any EpochCollection, which can be constructed to pick and choose relevant or custom
 // EpochTypes.
@@ -189,10 +186,10 @@ func (ec EpochCollection) GuessesForStrings(stringsToConvert []string) (epochRes
 
 // String satisfies the Stringer interface, so this is printed when %s is used in a formatting string for this type.
 func (e EpochType) String() string {
-	return fmt.Sprintf("Name of Epoch: %s\n" +
-		"Used for: %s\n" +
-		"Started On (UTC): %s\n" +
-		"Current UTC Time in Epoch Seconds: %d\n" +
+	return fmt.Sprintf("Name of Epoch: %s\n"+
+		"Used for: %s\n"+
+		"Started On (UTC): %s\n"+
+		"Current UTC Time in Epoch Seconds: %d\n"+
 		"Current Local Time in Epoch Seconds: %d\n", e.EpochName, strings.Join(e.EpochUses, ", "),
 		e.EpochDate.Format(time.RFC3339), e.UTCRightNowInSecondsSince, e.LocalRightNowInSecondsSince)
 }
@@ -251,7 +248,6 @@ func (a ByNearestDate) Less(i, j int) bool {
 	return a[i].EpochDate.Second() < a[j].EpochDate.Second()
 }
 
-
 // DateForNumber is a method on an EpochType. Given a number (in seconds), return the date (as time.Time) for the epoch
 func (e *EpochType) DateForNumber(epochSeconds int64, utcFlag bool) (timeInEpoch time.Time) {
 	if utcFlag {
@@ -305,7 +301,6 @@ func te(timeInRFC3339ZuluFormat string, utcFlag bool) (epoch int64) {
 	return epoch
 }
 
-
 /* =========== Epoch Data from Wikipedia! =============
 
 -- indicates it's not going to be used.
@@ -329,4 +324,3 @@ January 1, 2000	AppleSingle, AppleDouble,[33] PostgreSQL,[34] ZigBee UTCTime[35]
 January 1, 2001	Apple's Cocoa framework	2001 is the year of the release of Mac OS X 10.0 (but NSDate for Apple's EOF 1.0 was developed in 1994).
 
 */
-

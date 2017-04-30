@@ -8,44 +8,44 @@
 package epochconv
 
 import (
-	"time"
 	"fmt"
-	"strings"
-	"strconv"
 	"sort"
+	"strconv"
+	"strings"
+	"time"
 )
 
 //todo: what to do about javascript (1000x)
 // epochResult is used in an EpochResultBundle
 type epochResult struct {
-	InputNumber      int64		`json:"input_number"`
-	EpochType        EpochType	`json:"epoch_type"`
-	DateInEpochLocal time.Time	`json:"converted_date_local"`
-	DateInEpochUTC time.Time	`json:"converted_date_utc"`
+	InputNumber      int64     `json:"input_number"`
+	EpochType        EpochType `json:"epoch_type"`
+	DateInEpochLocal time.Time `json:"converted_date_local"`
+	DateInEpochUTC   time.Time `json:"converted_date_utc"`
 }
 
 type EpochResults struct {
-	InputNumber    int64	`json:"input_number"`
-	epochTypes     EpochCollection	`json:"epoch_types"`
-	AllResults     []epochResult	`json:"all_results"`
-	MostLikelyType EpochType	`json:"most_likely_epoch"`
+	InputNumber    int64           `json:"input_number"`
+	EpochTypes     EpochCollection `json:"epoch_types"`
+	AllResults     []epochResult   `json:"all_results"`
+	MostLikelyType EpochType       `json:"most_likely_epoch"`
 }
-
 
 // Given a slice of strings, return a slice of EpochGuessResults type, each of which is an array of EpochResults along
 // with the most likely result. Strings in the input slice are parsed in the following way:
 // 1) Strings are stripped of leading and trailing whitespace characters.
 // 2) Strings have all data after the first dot character removed. This allows for input of decimal numbers
 //    Without needing to convert to floats.
-// If one string cannot be converted, an Error is created indicating at least one string could not be converted. These strings
-// are returned in the badStrings slice.
+// If one string cannot be converted, an Error is created indicating at least one string could not be converted. These
+// strings are returned in the badStrings slice.
 // This can, of course, be ignored - and may be in a typical use case.
 func GuessesForStrings(stringsToConvert []string) (epochResults []EpochResults, badStrings []string, err error) {
 	epochResults, badStrings, err = createGuesses(stringsToConvert, AllEpochs)
 	return epochResults, badStrings, err
 }
 
-func createGuesses(stringsToConvert []string, collection EpochCollection) (epochResultsSlice []EpochResults, badStrings []string, err error) {
+func createGuesses(stringsToConvert []string, collection EpochCollection) (epochResultsSlice []EpochResults,
+	badStrings []string, err error) {
 	badStrings = make([]string, 0)
 	numbers, badStrings, err := stringSliceToInt64Base10s(stringsToConvert)
 	// Results array is as long as parsed numbers
@@ -53,26 +53,24 @@ func createGuesses(stringsToConvert []string, collection EpochCollection) (epoch
 	// loop through numbers and create epochs result data structures, which are an epoch type
 	// and the date in that epoch.
 	for i, n := range numbers {
-		epochResultsSlice[i].epochTypes = collection
+		epochResultsSlice[i].EpochTypes = collection
 		epochResultsSlice[i].InputNumber = n
 		for _, et := range collection {
-			er := epochResult{InputNumber:n,
-				EpochType:et,
-				DateInEpochLocal:et.DateForNumber(n,false),
-				DateInEpochUTC:et.DateForNumber(n,true),
+			er := epochResult{InputNumber: n,
+				EpochType:        et,
+				DateInEpochLocal: et.DateForNumber(n, false),
+				DateInEpochUTC:   et.DateForNumber(n, true),
 			}
 			epochResultsSlice[i].AllResults = append(epochResultsSlice[i].AllResults, er)
 		}
 		// Run OrderedEpochsByClosestMatch on EC which takes a number and a time to match on.
 		for i, _ := range epochResultsSlice {
-			epochResultsSlice[i].epochTypes = epochResultsSlice[i].epochTypes.OrderedEpochsByClosestMatch(n, time.Now())
+			epochResultsSlice[i].EpochTypes = epochResultsSlice[i].EpochTypes.OrderedEpochsByClosestMatch(n, time.Now())
 		}
-		epochResultsSlice[i].MostLikelyType = epochResultsSlice[i].epochTypes[0]
+		epochResultsSlice[i].MostLikelyType = epochResultsSlice[i].EpochTypes[0]
 	}
 	return epochResultsSlice, badStrings, err
 }
-
-
 
 // OrderedEpochsByClosestMatch is a Method on an EpochCollection. Given an EpochCollection, typically AllEpochs,
 // return a collection order by closest match of an epoch number given a date to convert to all epoch seconds. Do not
@@ -146,7 +144,6 @@ func getInt64Base10(parseMe string) (number int64, err error) {
 	return number, err
 }
 
-
 // a strange sort of way to sort a 2d array. It preserves the second array element's position.
 type epochDistances [][]int64
 type preserveSecondEl epochDistances
@@ -160,4 +157,3 @@ func (a preserveSecondEl) Swap(i, j int) {
 func (a preserveSecondEl) Less(i, j int) bool {
 	return a[i][0] < a[j][0]
 }
-

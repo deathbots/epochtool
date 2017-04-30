@@ -1,19 +1,19 @@
 package main
 
 import (
-	"github.com/atotto/clipboard"
-	"fmt"
-	"os"
-	"github.com/deathbots/epochtool/epochconv"
-	"github.com/fatih/color"
-	"time"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/atotto/clipboard"
+	"github.com/deathbots/epochtool"
+	"github.com/fatih/color"
+	"os"
+	"time"
 )
-
 
 // This type is used only for JSON marshalling.
 type EpochResultsArray struct {
-	EpochResultsArray []epochconv.EpochResults	`json:"epoch_results_array"`
+	EpochResultsArray []epochconv.EpochResults `json:"epoch_results_array"`
 }
 
 var (
@@ -36,10 +36,10 @@ func stdErr(m string) {
 	fmt.Fprintf(os.Stderr, "%s\n", m)
 }
 
-
 func getClipboardString() (out string, err error) {
 	if clipboard.Unsupported {
-		return out, fmt.Errorf("Clipboard functionality unsupported.")
+		err = errors.New("Clipboard functionality unsupported.")
+		return out, err
 	}
 	return clipboard.ReadAll()
 }
@@ -57,15 +57,14 @@ func deDuplicateStringSlice(sliceToDeDupe *[]string) {
 	*sliceToDeDupe = (*sliceToDeDupe)[:j]
 }
 
-
 func epochResultsAsString(ers epochconv.EpochResults) string {
 	var out string
 	// for non-string types that are printable via %s, you must turn them to strings first
 	// in order to apply a color.
 	colorMe := fmt.Sprintf("%s", ers.MostLikelyType)
-	out = out + fmt.Sprintf("For Input Number: %d\n" +
-		"---------Most Likely Result----\n" +
-		"%s" +
+	out = out + fmt.Sprintf("For Input Number: %d\n"+
+		"---------Most Likely Result----\n"+
+		"%s"+
 		"---------Other Results---------\n", ers.InputNumber, colorMostLikely(colorMe))
 	c := color.New(color.Reset).SprintfFunc()
 	// ol: //tag outer loop so we can break from within the switch when necessary
@@ -84,12 +83,12 @@ func epochResultsAsString(ers epochconv.EpochResults) string {
 		if er.EpochType.Prevalence < 3 {
 			c = color.New(color.Faint).SprintfFunc()
 		}
-		m := fmt.Sprintf("%d in this Epoch:\n" +
-			" Local - %s\n" +
-			" UTC - %s\n" +
+		m := fmt.Sprintf("%d in this Epoch:\n"+
+			" Local - %s\n"+
+			" UTC - %s\n"+
 			"%s\n", ers.InputNumber, er.DateInEpochLocal.Format(time.RFC3339),
 			er.DateInEpochUTC.Format(time.RFC3339), er.EpochType)
-		out = out + fmt.Sprintf("%s",c(m))
+		out = out + fmt.Sprintf("%s", c(m))
 	}
 
 	return out
@@ -97,7 +96,7 @@ func epochResultsAsString(ers epochconv.EpochResults) string {
 
 // easy conversion of this type made for JSON marshalling to json
 func (era EpochResultsArray) ToPrintableJson() (string, error) {
-	jsonByteArray, err := json.MarshalIndent(&era,"","  ")
+	jsonByteArray, err := json.MarshalIndent(&era, "", "  ")
 	if err != nil {
 		return "", err
 	}

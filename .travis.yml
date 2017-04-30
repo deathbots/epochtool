@@ -1,10 +1,12 @@
 language: go
 go:
 - 1.x
+before_script:
+  - go vet ./...
 install:
 - go get github.com/atotto/clipboard
 - go get github.com/fatih/color
-gobuild_args: -x -ldflags "-X main.Version $(git describe --tags --long)"
+gobuild_args: -i -race -v -ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool
 
 deploy:
   provider: releases

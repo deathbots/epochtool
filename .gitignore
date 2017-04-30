@@ -4,8 +4,8 @@
 *.so
 
 # output for program name in same dir
-epochtool
-epochtool.exe
+/epochtool
+/epochtool.exe
 
 # Folders
 _obj

@@ -79,7 +79,6 @@ func TestEpochsSortByDistance(t *testing.T) {
 		}
 		last = v
 	}
-
 	for _, sec := range epochSeconds {
 		fmt.Printf("%d\n", sec)
 	}

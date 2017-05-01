@@ -7,17 +7,17 @@
 // Makes a best guess as to the type of epoch being used based on its relation to the current time.
 
 // The epochconv package is currently more flexible than the command line interface, allowing
-// time ranges.
+// time ranges, for instance.
 
 package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/deathbots/epochtool"
 	"github.com/fatih/color"
-	"io"
+	"fmt"
 	"os"
+	"io"
 	"strings"
 )
 
@@ -31,14 +31,14 @@ type options struct {
 	epochsIn           []string
 	useStdIn           bool
 	useClipboard       bool
-	noColor            bool
+	colorOut           bool
 	emitJson           bool
 	showAllConversions bool
 }
 
 // Some globals
 var (
-	opts             = new(options)
+	opts = new(options)
 	progFriendlyName = "epochtool"
 )
 
@@ -47,7 +47,7 @@ var (
 // To look up which exit code corresponds to a number, count downward starting at
 // exitBadFlags, which is -1. All subsequent are -2, -3, etc...
 const (
-	exitNoError  = iota // 0 value, all other values are -1 down
+	exitNoError = iota // 0 value, all other values are -1 down
 	exitBadFlags = -1 * iota
 	exitNoEpochStringsError
 	exitClipboardError
@@ -62,13 +62,15 @@ const (
 	defFlagString = "REQUIRED"
 )
 
+
 func init() {
 	flag.BoolVar(&opts.printVersionFlag, "version", false, "Print the version and quit")
 	flag.BoolVar(&opts.useClipboard, "clipboard", false, "Parse data from the clipboard")
-	flag.BoolVar(&opts.noColor, "no-color", false, "Disable color output")
-	flag.BoolVar(&opts.emitJson, "json", true, "Print json output")
-	flag.BoolVar(&opts.showAllConversions, "top-match", false, "Show only the closest match for each parsed epoch, "+
-		"instead of the default case which is to show all matches.")
+	flag.BoolVar(&opts.colorOut, "color", false, "Enable color output - off by default. Useful for 'all' argument" +
+		" where color is relative to prevalence.")
+	flag.BoolVar(&opts.emitJson, "json", false, "Print output as data structure in JSON")
+	flag.BoolVar(&opts.showAllConversions, "all", false, "Show all matches for each parsed epoch, " +
+		"instead of the default case which is to show only the closest match.")
 }
 
 func main() {
@@ -86,7 +88,7 @@ func main() {
 		}
 	}
 	// Add any items from os.args
-	epochStringsFromCommandLine(&opts.epochsIn)
+	epochStringsFromCommandLine(&opts.epochsIn, flag.Args())
 
 	if opts.useClipboard {
 		err = epochStringsFromClipboard(&opts.epochsIn)
@@ -118,8 +120,9 @@ func main() {
 	} else {
 		for _, er := range epochResults {
 			// color output - Windows requires color.Output as the FPrint arg.
-			fmt.Fprintf(color.Output, "%s\n", epochResultsAsString(er))
+			fmt.Fprintf(color.Output, "%s\n", epochResultsAsString(er, opts.showAllConversions))
 		}
+
 		if err != nil {
 			if opts.useClipboard {
 				stdErr("Some strings could not be parsed, but they will remain hidden in clipboard mode.")
@@ -137,7 +140,7 @@ func parseArgs() (err error) {
 		fmt.Printf("%s version %s\n", progFriendlyName, Version)
 	}
 	usage := func() {
-		fmt.Printf("%s\nAccepts data to parse on command line, to stdin, or from the clipboard.", progFriendlyName)
+		fmt.Printf("%s\nAccepts data to parse on command line, to stdin, or from the clipboard.\n", progFriendlyName)
 		fmt.Println("Command line parsing:")
 		fmt.Printf("\tUsage: %s -flags data1, data2 data3 \n", progFriendlyName)
 		fmt.Println("Stdin parsing:")
@@ -155,7 +158,7 @@ func parseArgs() (err error) {
 	}
 	opts.emitJson = false
 	flag.Parse()
-	if opts.noColor {
+	if !opts.colorOut {
 		color.NoColor = true // disables colorized output
 	}
 	if len(os.Args) == 1 {
@@ -185,22 +188,11 @@ func parseArgs() (err error) {
 
 // epochStringsFromCommandLine collects strings from the os.args, before any start with -,
 // and adds to the collected strings list - passed by reference.
-func epochStringsFromCommandLine(sliceToFill *[]string) {
-	for _, arg := range flag.Args() {
-		// Can we split this arg by comma? Could be 3098432,318401,4190
-		// note - spaces after commas are OK, as are newlines, cr's, and tabs.
-		// those are handled in the conversion to int64 function.
-
-		//multiEpochsInSingleArg := strings.Split(arg, ",")
-		//if len(multiEpochsInSingleArg) > 1 {
-		//	// was split out
-		//	fmt.Printf("Parsed out multiple strings in single comma separated")
-		//	*sliceToFill = append(*sliceToFill, multiEpochsInSingleArg...)
-		//} else {
-		//	*sliceToFill = append(*sliceToFill, arg)
-		//}
+func epochStringsFromCommandLine(sliceToFill *[]string, args []string) {
+	for _, arg := range epochconv.NumbersInStrings(args) {
 		*sliceToFill = append(*sliceToFill, arg)
 	}
+	deDuplicateStringSlice(sliceToFill)
 }
 
 // epochStringsFromStdin takes a slice of strings and adds items from stdin using fmt.Scan
@@ -219,6 +211,8 @@ func epochStringsFromStdin(sliceToFill *[]string) (err error) {
 		}
 		*sliceToFill = append(*sliceToFill, s)
 	}
+	epochconv.NumbersInStrings(*sliceToFill)
+	deDuplicateStringSlice(sliceToFill)
 	return err
 }
 
@@ -227,9 +221,10 @@ func epochStringsFromClipboard(sliceToFill *[]string) (err error) {
 	if err != nil {
 		return err
 	}
-	*sliceToFill = append(*sliceToFill, strings.Split(s, "\n")...)
-	*sliceToFill = append(*sliceToFill, strings.Split(s, "\r\n")...)
-	*sliceToFill = append(*sliceToFill, strings.Split(s, ",")...)
+	splitters := []string{"\n", "\r\n", "\t", ","}
+	for _, splitter := range splitters {
+		*sliceToFill = append(*sliceToFill, epochconv.NumbersInStrings(strings.Split(s, splitter))...)
+	}
+	deDuplicateStringSlice(sliceToFill)
 	return err
-
 }

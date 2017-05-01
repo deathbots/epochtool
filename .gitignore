@@ -5,6 +5,8 @@
 
 # compiled output
 /cmd/epochtool/epochtool*
+/epochtool
+/epochtool.exe
 
 # Folders
 _obj

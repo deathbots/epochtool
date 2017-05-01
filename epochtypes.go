@@ -200,8 +200,6 @@ func (e EpochType) ToJson() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//n := bytes.IndexByte(jsonByteArray, 0)
-	//return string(jsonByteArray[:n]), err
 	return string(jsonByteArray), err
 }
 
@@ -218,8 +216,6 @@ func (ec EpochCollection) ToJson() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//n := bytes.IndexByte(jsonByteArray, 0)
-	//return string(jsonByteArray[:n]), err
 	return string(jsonByteArray), err
 }
 

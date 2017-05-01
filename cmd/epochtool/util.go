@@ -57,16 +57,21 @@ func deDuplicateStringSlice(sliceToDeDupe *[]string) {
 	*sliceToDeDupe = (*sliceToDeDupe)[:j]
 }
 
-func epochResultsAsString(ers epochconv.EpochResults) string {
+func epochResultsAsString(ers epochconv.EpochResults, showAll bool) string {
 	var out string
 	// for non-string types that are printable via %s, you must turn them to strings first
 	// in order to apply a color.
 	colorMe := fmt.Sprintf("%s", ers.MostLikelyType)
 	out = out + fmt.Sprintf("For Input Number: %d\n"+
 		"---------Most Likely Result----\n"+
-		"%s"+
-		"---------Other Results---------\n", ers.InputNumber, colorMostLikely(colorMe))
+		"%s", ers.InputNumber, colorMostLikely(colorMe))
+	if !showAll {
+		return out
+	}
 	c := color.New(color.Reset).SprintfFunc()
+	out = out + fmt.Sprint(
+		"---------Other Results---------\n")
+
 	// ol: //tag outer loop so we can break from within the switch when necessary
 	for i, er := range ers.AllResults {
 		switch {
@@ -83,14 +88,26 @@ func epochResultsAsString(ers epochconv.EpochResults) string {
 		if er.EpochType.Prevalence < 3 {
 			c = color.New(color.Faint).SprintfFunc()
 		}
-		m := fmt.Sprintf("%d in this Epoch:\n"+
+		m := fmt.Sprintf("%d in '%s' Epoch:\n"+
 			" Local - %s\n"+
 			" UTC - %s\n"+
-			"%s\n", ers.InputNumber, er.DateInEpochLocal.Format(time.RFC3339),
+			"%s\n", ers.InputNumber, er.EpochType.EpochName, er.DateInEpochLocal.Format(time.RFC3339),
 			er.DateInEpochUTC.Format(time.RFC3339), er.EpochType)
 		out = out + fmt.Sprintf("%s", c(m))
 	}
 
+	return out
+}
+
+func epochTopResultAsString(ers epochconv.EpochResults) string {
+	var out string
+	// for non-string types that are printable via %s, you must turn them to strings first
+	// in order to apply a color.
+	colorMe := fmt.Sprintf("%s", ers.MostLikelyType)
+	out = out + fmt.Sprintf("For Input Number: %d\n"+
+		"---------Most Likely Result----\n"+
+		"%s"+
+		"---------Other Results---------\n", ers.InputNumber, colorMostLikely(colorMe))
 	return out
 }
 

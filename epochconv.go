@@ -13,9 +13,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"regexp"
 )
 
-//todo: what to do about javascript (1000x)
+//todo: JS Epoch (unix in milliseconds) currently unhandled?
+// perhaps for each number, divide and see if it's close to unix?
+
 // epochResult is used in an EpochResultBundle
 type epochResult struct {
 	InputNumber      int64     `json:"input_number"`
@@ -36,9 +39,8 @@ type EpochResults struct {
 // 1) Strings are stripped of leading and trailing whitespace characters.
 // 2) Strings have all data after the first dot character removed. This allows for input of decimal numbers
 //    Without needing to convert to floats.
-// If one string cannot be converted, an Error is created indicating at least one string could not be converted. These
-// strings are returned in the badStrings slice.
-// This can, of course, be ignored - and may be in a typical use case.
+// If one string that seemed to match a number cannot be converted, an Error is returned.
+// However, the numbers that were convertible are still returned. Ignore the error and continue, if desired.
 func GuessesForStrings(stringsToConvert []string) (epochResults []EpochResults, badStrings []string, err error) {
 	epochResults, badStrings, err = createGuesses(stringsToConvert, AllEpochs)
 	return epochResults, badStrings, err
@@ -46,7 +48,7 @@ func GuessesForStrings(stringsToConvert []string) (epochResults []EpochResults, 
 
 func createGuesses(stringsToConvert []string, collection EpochCollection) (epochResultsSlice []EpochResults,
 	badStrings []string, err error) {
-	badStrings = make([]string, 0)
+
 	numbers, badStrings, err := stringSliceToInt64Base10s(stringsToConvert)
 	// Results array is as long as parsed numbers
 	epochResultsSlice = make([]EpochResults, len(numbers))
@@ -134,7 +136,7 @@ func stringSliceToInt64Base10s(stringsToConvert []string) (numbers []int64, badS
 		}
 	}
 	if len(badStrings) > 0 {
-		err = fmt.Errorf("Some strings not converted, see badStrings")
+		err = fmt.Errorf("Some strings not converted, %s", badStrings)
 	}
 	return numbers, badStrings, err
 }
@@ -157,3 +159,17 @@ func (a preserveSecondEl) Swap(i, j int) {
 func (a preserveSecondEl) Less(i, j int) bool {
 	return a[i][0] < a[j][0]
 }
+
+// Given a slice of strings which could have integer data, create a new slice of only numbers in any of the strings
+func NumbersInStrings(stringsToClean []string) (numbersOnly []string){
+	re := regexp.MustCompile("[0-9]+")
+	numbersOnly = make([]string, 0)
+
+	for _, s := range stringsToClean {
+		nums := re.FindAllString(s, -1)
+		numbersOnly = append(numbersOnly, nums...)
+	}
+	return numbersOnly
+}
+
+

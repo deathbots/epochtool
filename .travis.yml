@@ -8,6 +8,9 @@ install:
 - go get github.com/fatih/color
 gobuild_args: -i -race -v --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool
 
+script:
+ - go test -v ./...
+
 before_deploy:
   - mkdir release
   - cp README.md README.txt

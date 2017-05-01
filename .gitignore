@@ -3,9 +3,10 @@
 *.a
 *.so
 
-# output for program name in same dir
-epochtool
-epochtool.exe
+# compiled output
+/cmd/epochtool/epochtool*
+/epochtool
+/epochtool.exe
 
 # Folders
 _obj

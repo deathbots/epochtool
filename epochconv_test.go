@@ -1,11 +1,11 @@
 package epochconv
 
 import (
-	"testing"
-	"reflect"
-	"time"
 	"fmt"
 	"math"
+	"reflect"
+	"testing"
+	"time"
 )
 
 // used to determine the strings are parseable because particular errors are swallowed
@@ -27,7 +27,6 @@ var timeStringTests = []struct {
 	{EpochMacOSX},
 }
 
-
 // Tests whether the time string constants are parseable. If they are not, when sp and te functions are used to
 // initialize the struct literal, you would get Time that prints like 0001-01-01 00:00:00 +0000 UTC and the empty string
 // respectively.
@@ -37,11 +36,10 @@ func TestTimeStringsParseable(t *testing.T) {
 			t.Errorf("Time was not initialized properly for Epoch Date %s, check format string constant used", tt.in.EpochName)
 		}
 		if tt.in.LocalRightNowInSecondsSince < 1 {
-			t.Errorf("Epoch time %s, from Epoch Date %s, was not greater than one", tt.in.LocalRightNowInSecondsSince, tt.in.EpochName)
+			t.Errorf("Epoch time %d, from Epoch Date %s, was not greater than one", tt.in.LocalRightNowInSecondsSince, tt.in.EpochName)
 		}
 	}
 }
-
 
 // Tests whether every struct in timeStringTests is included in AllEpochs.
 func TestAllEpochsContainsAll(t *testing.T) {
@@ -53,10 +51,9 @@ func TestAllEpochsContainsAll(t *testing.T) {
 	}
 }
 
-
 // Tests whether top result is correctly picked for a known epoch
 func TestFirstSortedEpochFromUnix(t *testing.T) {
-	sorted := AllEpochs.OrderedEpochsByClosestMatch(0, time.Unix(0,0).UTC())
+	sorted := AllEpochs.OrderedEpochsByClosestMatch(0, time.Unix(0, 0).UTC())
 	if sorted[0].EpochName != "Unix" {
 		t.Errorf("Epoch Type %s was not incorrect for testing against Unix timestamp", sorted[0].EpochName)
 	}
@@ -66,11 +63,11 @@ func TestFirstSortedEpochFromUnix(t *testing.T) {
 func TestEpochsSortByDistance(t *testing.T) {
 	epochStartTime, err := time.Parse(time.RFC3339, dateStringCommonEra)
 	if err != nil {
-		t.Errorf("Could not parse epoch start time", err)
+		t.Errorf("Could not parse epoch start time: %s", err)
 	}
 	sorted := AllEpochs.OrderedEpochsByClosestMatch(0, epochStartTime)
 
-	epochSeconds := make([]int64,len(sorted))
+	epochSeconds := make([]int64, len(sorted))
 	for i, et := range sorted {
 		epochSeconds[i] = et.LocalRightNowInSecondsSince
 	}
@@ -78,7 +75,7 @@ func TestEpochsSortByDistance(t *testing.T) {
 	last := int64(math.MaxInt64)
 	for _, v := range epochSeconds {
 		if v > last {
-			t.Errorf("Epoch collection Sorting was done incorrectly", err)
+			t.Errorf("Epoch collection Sorting was done incorrectly: %s", err)
 		}
 		last = v
 	}
@@ -88,7 +85,6 @@ func TestEpochsSortByDistance(t *testing.T) {
 	}
 }
 
-
 func epochInSlice(s []EpochType, e EpochType) bool {
 	for _, a := range s {
 		if reflect.DeepEqual(a, e) {
@@ -97,4 +93,3 @@ func epochInSlice(s []EpochType, e EpochType) bool {
 	}
 	return false
 }
-

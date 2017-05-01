@@ -21,7 +21,7 @@ before_deploy:
   - 'GOARCH=amd64 GOOS=freebsd go build -o epochtool --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && tar -zcf release/epochtool-freebsd-amd64.tar.gz epochtool README.txt'
   - 'GOARCH=arm GOOS=freebsd go build -o epochtool --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && tar -zcf release/epochtool-freebsd-arm.tar.gz epochtool README.txt'
   - 'GOARCH=386 GOOS=darwin go build -o epochtool --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && tar -zcf release/epochtool-darwin-i386.tar.gz epochtool README.txt'
-  - 'GOARCH=arm GOOS=darwin go build -o epochtool --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && tar -zcf release/epochtool-darwin-amd64.tar.gz epochtool README.txt'
+  - 'GOARCH=amd64 GOOS=darwin go build -o epochtool --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && tar -zcf release/epochtool-darwin-amd64.tar.gz epochtool README.txt'
   - unix2dos -n README.md README.txt
   - 'GOARCH=386 GOOS=windows go build -o epochtool.exe --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && zip release/epochtool-windows-i386.zip epochtool.exe README.txt'
   - 'GOARCH=amd64 GOOS=windows go build -o epochtool.exe --ldflags "-X \"main.Version=$(git describe --tags --long)\"" ./cmd/epochtool && zip release/epochtool-windows-amd64.zip epochtool.exe README.txt'

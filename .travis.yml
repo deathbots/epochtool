@@ -45,6 +45,7 @@ deploy:
     - "release/epochtool-darwin-amd64.tar.gz"
     - "release/epochtool-windows-i386.tar.gz"
     - "release/epochtool-windows-amd64.tar.gz"
+  skip_cleanup: true
   on:
     tags: true
   overwrite: true
